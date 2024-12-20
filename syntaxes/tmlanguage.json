@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "$ref": "#/definitions/root",
+  "definitions": {
+    "root": {
+      "allOf": [
+        { "$ref": "#/definitions/grammar" },
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "scopeName": {
+              "description": "这应该是语法的唯一名称，遵循以点分隔的名称的惯例，其中每个新部分（最左边）都专门用于该名称。通常，它应该是一个由两部分组成的名称，其中第一部分是文本或源，第二部分是语言或文档类型的名称。但如果您要专门化现有类型，则可能希望从您要专门化的类型中派生名称。例如，Markdown 是 text.html.markdown ，而 Ruby on Rails（rhtml 文件）是 text.html.rails。从（在本例中）text.html 派生它的优点是，在 text.html 范围内工作的所有内容也将在 text.html.«something» 范围内工作（但优先级低于专门针对 text.html.«something» 的内容）。",
+              "type": "string",
+              "pattern": "^(text|source)(\\.[\\w0-9-]+)+$"
+            },
+            "foldingStartMarker": {
+              "description": "文档中的行与之匹配的正则表达式。如果某一行与其中一个模式匹配（但不是同时匹配），则该行将成为折叠标记（有关详细信息，请参阅折叠部分）。",
+              "type": "string"
+            },
+            "foldingStopMarker": {
+              "description": "文档中的行与之匹配的正则表达式。如果某一行与其中一个模式匹配（但不是同时匹配），则该行将成为折叠标记（有关详细信息，请参阅折叠部分）。",
+              "type": "string"
+            },
+            "fileTypes": {
+              "description": "这是语法应（默认情况下）使用的文件类型扩展名数组。当 TextMate 不知道用户打开的文件应使用哪种语法时，将引用此数组。但是，如果用户从状态栏中的语言弹出窗口中选择语法，TextMate 将记住该选择。",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "uuid": { "type": "string" },
+            "firstLineMatch": { "type": "string" }
+          },
+          "required": ["scopeName"]
+        }
+      ]
+    },
+    "grammar": {
+      "type": "object",
+      "properties": {
+        "patterns": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/pattern" },
+          "default": []
+        },
+        "repository": {
+          "description": "规则的字典（即键/值对），可从语法中的其他地方包含。键是规则的名称，值是实际规则。进一步的解释（和示例）遵循包含规则键的描述。",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/pattern"
+          }
+        }
+      },
+      "required": ["patterns"]
+    },
+    "captures": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "object",
+          "properties": {
+            "name": { "$ref": "#/definitions/name" },
+            "patterns": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/pattern" },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "pattern": {
+      "type": "object",
+      "properties": {
+        "comment": { "type": "string" },
+        "disabled": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "set this property to 1 to disable the current pattern"
+        },
+        "include": {
+          "description": "这允许您引用不同的语言，递归引用语法本身或此文件存储库中声明的规则。",
+          "type": "string"
+        },
+        "match": {
+          "description": "一个正则表达式，用于识别应分配名称的文本部分。示例：“\\b(true|false)\\b”。",
+          "type": "string"
+        },
+        "name": {
+          "description": "分配给匹配部分的名称。这用于样式和特定范围的设置和操作，这意味着它通常应该从标准名称之一派生而来。",
+          "$ref": "#/definitions/name"
+        },
+        "contentName": {
+          "description": "此键类似于名称键，但仅将名称分配给开始/结束模式匹配之间的文本。",
+          "$ref": "#/definitions/name"
+        },
+        "begin": {
+          "description": "这些键允许匹配跨越多行，并且必须与匹配键互斥。每个都是正则表达式模式。begin 是开始块的模式，end 是结束块的模式。可以使用普通正则表达式反向引用在结束模式中引用来自 begin 模式的捕获。这通常与 here-docs 一起使用。begin/end 规则可以使用 patterns 键具有嵌套模式。",
+          "type": "string"
+        },
+        "end": {
+          "description": "这些键允许匹配跨越多行，并且必须与匹配键互斥。每个都是正则表达式模式。begin 是开始块的模式，end 是结束块的模式。可以使用普通正则表达式反向引用在结束模式中引用来自 begin 模式的捕获。这通常与 here-docs 一起使用。begin/end 规则可以使用 patterns 键具有嵌套模式。",
+          "type": "string"
+        },
+        "while": {
+          "description": "这些键允许匹配跨越多行，并且必须与匹配键互斥。每个都是正则表达式模式。begin 是块的开始模式，while 是块的继续模式。",
+          "type": "string"
+        },
+        "captures": {
+          "description": "允许您为匹配模式的捕获分配属性。使用捕获键作为开始/结束规则是为 beginCaptures 和 endCaptures 提供相同值的简便方法。",
+          "$ref": "#/definitions/captures"
+        },
+        "beginCaptures": {
+          "description": "允许您为开始模式的捕获分配属性。使用捕获键作为开始/结束规则是为 beginCaptures 和 endCaptures 提供相同值的简便方法。",
+          "$ref": "#/definitions/captures"
+        },
+        "endCaptures": {
+          "description": "允许您为结束模式的捕获分配属性。使用捕获键作为开始/结束规则是为 beginCaptures 和 endCaptures 提供相同值的简便方法。",
+          "$ref": "#/definitions/captures"
+        },
+        "whileCaptures": {
+          "description": "允许您为 while 模式的捕获分配属性。使用 begin/while 规则的捕获键可以简化为 beginCaptures 和 whileCaptures 赋予相同值的过程。",
+          "$ref": "#/definitions/captures"
+        },
+        "patterns": {
+          "description": "适用于开始和结束匹配之间的区域",
+          "type": "array",
+          "items": { "$ref": "#/definitions/pattern" },
+          "default": []
+        },
+        "applyEndPatternLast": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "dependencies": {
+        "begin": {
+          "anyOf": [{ "required": ["end"] }, { "required": ["while"] }]
+        },
+        "end": ["begin"],
+        "while": ["begin"],
+        "contentName": {
+          "anyOf": [
+            { "required": ["begin", "end"] },
+            { "required": ["begin", "while"] }
+          ]
+        },
+        "beginCaptures": {
+          "anyOf": [
+            { "required": ["begin", "end"] },
+            { "required": ["begin", "while"] }
+          ]
+        },
+        "whileCaptures": ["begin", "while"],
+        "endCaptures": ["begin", "end"],
+        "applyEndPatternLast": ["end"]
+      }
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string",
+          "enum": [
+            "comment",
+            "comment.block",
+            "comment.block.documentation",
+            "comment.line",
+            "comment.line.double-dash",
+            "comment.line.double-slash",
+            "comment.line.number-sign",
+            "comment.line.percentage",
+            "constant",
+            "constant.character",
+            "constant.character.escape",
+            "constant.language",
+            "constant.numeric",
+            "constant.other",
+            "constant.regexp",
+            "constant.rgb-value",
+            "constant.sha.git-rebase",
+            "emphasis",
+            "entity",
+            "entity.name",
+            "entity.name.class",
+            "entity.name.function",
+            "entity.name.method",
+            "entity.name.section",
+            "entity.name.selector",
+            "entity.name.tag",
+            "entity.name.type",
+            "entity.other",
+            "entity.other.attribute-name",
+            "entity.other.inherited-class",
+            "header",
+            "invalid",
+            "invalid.deprecated",
+            "invalid.illegal",
+            "keyword",
+            "keyword.control",
+            "keyword.control.less",
+            "keyword.operator",
+            "keyword.operator.new",
+            "keyword.other",
+            "keyword.other.unit",
+            "markup",
+            "markup.bold",
+            "markup.changed",
+            "markup.deleted",
+            "markup.heading",
+            "markup.inline.raw",
+            "markup.inserted",
+            "markup.italic",
+            "markup.list",
+            "markup.list.numbered",
+            "markup.list.unnumbered",
+            "markup.other",
+            "markup.punctuation.list.beginning",
+            "markup.punctuation.quote.beginning",
+            "markup.quote",
+            "markup.raw",
+            "markup.underline",
+            "markup.underline.link",
+            "meta",
+            "meta.cast",
+            "meta.parameter.type.variable",
+            "meta.preprocessor",
+            "meta.preprocessor.numeric",
+            "meta.preprocessor.string",
+            "meta.return-type",
+            "meta.selector",
+            "meta.structure.dictionary.key.python",
+            "meta.tag",
+            "meta.type.annotation",
+            "meta.type.name",
+            "metatag.php",
+            "storage",
+            "storage.modifier",
+            "storage.modifier.import.java",
+            "storage.modifier.package.java",
+            "storage.type",
+            "storage.type.cs",
+            "storage.type.java",
+            "string",
+            "string.html",
+            "string.interpolated",
+            "string.jade",
+            "string.other",
+            "string.quoted",
+            "string.quoted.double",
+            "string.quoted.other",
+            "string.quoted.single",
+            "string.quoted.triple",
+            "string.regexp",
+            "string.unquoted",
+            "string.xml",
+            "string.yaml",
+            "strong",
+            "support",
+            "support.class",
+            "support.constant",
+            "support.function",
+            "support.function.git-rebase",
+            "support.other",
+            "support.property-value",
+            "support.type",
+            "support.type.property-name",
+            "support.type.property-name.css",
+            "support.type.property-name.less",
+            "support.type.property-name.scss",
+            "support.variable",
+            "variable",
+            "variable.language",
+            "variable.name",
+            "variable.other",
+            "variable.parameter"
+          ]
+        }
+      ]
+    }
+  }
+}

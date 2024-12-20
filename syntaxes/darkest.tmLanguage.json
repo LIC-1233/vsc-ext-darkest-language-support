@@ -1,0 +1,69 @@
+{
+  "$schema": "./tmlanguage.json",
+  "name": "darkest",
+  "patterns": [
+    {
+      "include": "#keywordsl1"
+    },
+    {
+      "include": "#keywordsl2"
+    },
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#strings"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.darkest",
+      "begin": "//",
+      "end": "\\n",
+      "beginCaptures": {
+        "0": {
+          "name": "comment.open.darkest"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "comment.close.darkest"
+        }
+      }
+    },
+    "keywordsl1": {
+      "name": "keyword.control.darkest",
+      "match": "(\\w+)(?=: )"
+    },
+    "keywordsl2": {
+      "match": "\\.([a-zA-Z_]+)([\\d\\s\"].*?)(?=(?:\\.[a-zA-Z_])|\n)",
+      "captures": {
+        "1": { "name": "keyword.other.darkest" },
+        "2": { "name": "string.darkest" }
+      }
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.darkest",
+          "match": "\\b(:if|while|for|return)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.darkest",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.darkest",
+          "match": "\\\\."
+        }
+      ]
+    }
+  },
+  "scopeName": "source.darkest"
+}
